@@ -161,6 +161,7 @@ public class RuntimeProtoGenerator implements ProtoGenerator {
 					.get(runtimeSchema);
 
 			for (int i = 0; i != fields.length; ++i) {
+        boolean error = false;
 
 				com.dyuproject.protostuff.runtime.MappedSchema.Field<?> field = fields[i];
 
@@ -186,8 +187,9 @@ public class RuntimeProtoGenerator implements ProtoGenerator {
 
 					Pair<RuntimeFieldType, Class<?>> normField = ReflectionUtil.normalizeFieldClass(field);
 					if (normField == null) {
-						throw new IllegalStateException(
-								"unknown fieldClass " + field.getClass());
+            continue;
+            // throw new IllegalStateException(
+						// 		"unknown fieldClass " + field.getClass());
 					}
 
 					Class<?> fieldClass = normField.getSecond();
@@ -221,7 +223,8 @@ public class RuntimeProtoGenerator implements ProtoGenerator {
 						Schema<?> fieldSchema = (Schema<?>) schemaField.get(field);
 						Pair<RuntimeSchemaType, Class<?>> normSchema = ReflectionUtil.normalizeSchemaClass(fieldSchema.getClass());
 						if (normSchema == null) {
-							throw new IllegalStateException("unknown schema type " + fieldSchema.getClass());
+							continue;
+              // throw new IllegalStateException("unknown schema type " + fieldSchema.getClass());
 						}
 						
 						switch(normSchema.getFirst()) {
@@ -251,17 +254,25 @@ public class RuntimeProtoGenerator implements ProtoGenerator {
 						
 					}
 					else {
-						throw new IllegalStateException("unknown fieldClass " + field.getClass());
+            continue;
+						// throw new IllegalStateException("unknown fieldClass " + field.getClass());
 					}
 
 				} else {
 					fieldType = field.type.toString().toLowerCase();
 				}
 
+        if (error) {
+          continue;
+        }
 				output.append("  ");
 				
-				if (field.repeated) {
+				if (field.repeated || fieldType.equals("ArrayObject")) {
 					output.append("repeated ");
+          if (fieldType.equals("ArrayObject")) {
+            output.append("int32");
+            fieldType = "";
+          }
 				} else {
 					output.append("optional ");
 				}
